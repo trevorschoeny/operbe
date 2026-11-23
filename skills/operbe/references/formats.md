@@ -7,8 +7,9 @@
 - 1. The profile: `operbe.md`
 - 2. An operation
 - 3. A behavior
-- 4. Coverage
-- 5. Generated files
+- 4. A client action
+- 5. Coverage
+- 6. Generated files
 
 All files are plain text: a short header between `---` lines, then sections that each start with `## `. Header lines are `key: value`. A list is written `[a, b, c]`. Text after ` #` on a header line is a comment.
 
@@ -23,17 +24,20 @@ behaviors/<id>.md            one file per behavior
 behaviors/coverage/<ui>.md   one file per UI
 behaviors/INDEX.md           generated
 behaviors/COVERAGE.md        generated
+client-actions/<name>.md     one file per client action (optional list)
+client-actions/INDEX.md      generated
 ```
 
-A project may move the two folders; it says where in `operbe.md`.
+A project may move the folders; it says where in `operbe.md`.
 
 ## 1. The profile: `operbe.md`
 
 ```
 ---
-operbe: 0.1
+operbe: 0.2
 operations: operations            # folder of operation records
 behaviors: behaviors              # folder of behavior records
+client-actions: client-actions    # folder of client action records; leave the line out if the project keeps none
 uis: [phone, desktop]             # the project's UIs; [] if it has none
 ---
 
@@ -48,6 +52,7 @@ Rules of operbe this project doesn't yet follow, one per line. This list may onl
 |---|---|
 | `operbe` | The version of the method the project follows. |
 | `operations`, `behaviors` | Folders, relative to this file. |
+| `client-actions` | Optional. A folder, relative to this file. A project without the line keeps no client actions, and nothing about them is checked. |
 | `uis` | Names of the project's UIs. Other front ends are not listed: they have no behaviors. |
 | Decisions | Required section; may be empty. |
 | Known deviations | Required section; may be empty. |
@@ -125,6 +130,7 @@ replaced-by:                  # an id; only when retired
 | `applies-to` | `all`, or a list of names from the profile's `uis`. |
 | `operations` | Names that exist in the operation list. May be empty. |
 | `replaced-by` | Required when `retired`; otherwise empty. |
+| `client-actions` | Optional. `none` says this behavior has nothing to call, so the check doesn't report it as missing a client action. |
 | Statement | Required. |
 | Examples | Required. At least two, each a list item. A `rough` behavior may have fewer. |
 | Changes | Required. One list item per form, newest first. |
@@ -133,7 +139,45 @@ Optional sections, only under these names: **Flow**, **Appears when**, **Usable 
 
 Order: Statement, then any optional sections, then Examples, then Changes.
 
-## 4. Coverage: `behaviors/coverage/<ui>.md`
+## 4. A client action: `client-actions/<name>.md`
+
+Only in a project whose profile has a `client-actions` line. The file name is the action's name.
+
+```
+---
+name: archive-conversation
+class: do                     # show | prepare | do
+behaviors: [B-0001]           # the behaviors it carries out; at least one
+operations: [archive-conversation]
+available-when: the conversation is not archived and I may change it
+applies-to: all               # all, or [phone, desktop]
+in-palette: yes               # yes | no
+form: 1
+---
+
+## Sentence
+Archive {conversation}.
+
+## Result
+Done: the conversation has left the list and Undo is offered. Refused: says why.
+```
+
+| Field | Rule |
+|---|---|
+| `name` | Lowercase words joined by hyphens: a verb, then the thing. Unique among client actions. It may be the same as an operation's name. |
+| `class` | Exactly one of `show`, `prepare`, `do`. |
+| `behaviors` | Ids that exist and are not retired. At least one. |
+| `operations` | Names from the operation list. A `show` lists only queries. A `do` lists at least one change or signal. |
+| `available-when` | The condition in words, or `always`. |
+| `applies-to` | `all`, or a list of names from the profile's `uis`. |
+| `in-palette` | `yes` or `no`. |
+| `form` | A whole number, 1 or more. It goes up when the name, the inputs or the result change. |
+| Sentence | Required. One sentence, every input in `{braces}`. |
+| Result | Required. What the caller is told when it is done, refused, or waiting for the person. |
+
+Optional section: **Unavailable**, the reasons it can be unavailable, one per list item.
+
+## 5. Coverage: `behaviors/coverage/<ui>.md`
 
 One file per UI, named as in the profile.
 
@@ -145,15 +189,16 @@ One file per UI, named as in the profile.
 | B-0031 | honours | 1 | |
 | B-0032 | differs | 1 | Undo appears only after a delay; being fixed. |
 | B-0040 | not-here | | No room on this screen size. Decided by the designer. |
+| archive-conversation | honours | 1 | |
 ```
 
 | Column | Rule |
 |---|---|
-| `id` | A behavior that applies to this UI. At most one line each. |
+| `id` | A behavior that applies to this UI, or the name of a client action that does. At most one line each. |
 | `value` | `honours`, `differs`, `limited` or `not-here`. A behavior with no line in the file hasn't been built on this UI yet. A `rough` behavior may have lines. |
 | `form` | For `honours`, `differs` and `limited`: the form the UI was built against. |
 | `note` | Required for `differs`, `limited` and `not-here`. |
 
-## 5. Generated files
+## 6. Generated files
 
-`check.py --write` produces `behaviors/INDEX.md` (every behavior: id, name, status, form) and `behaviors/COVERAGE.md` (behavior by UI). Never edit them by hand.
+`check.py --write` produces `behaviors/INDEX.md` (every behavior: id, name, status, form), `behaviors/COVERAGE.md` (behavior by UI) and, where the project keeps client actions, `client-actions/INDEX.md` (every action: name, class, behaviors, and each UI). Never edit them by hand.

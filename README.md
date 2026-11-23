@@ -2,14 +2,15 @@
 
 operbe is the operations and behaviors method: a software development method for any project with a server and one or more front ends.
 
-Version 0.1. Everything in it is experimental until it has been proven on two projects.
+Version 0.2. Everything in it is experimental until it has been proven on two projects.
 
 ## What it is
 
-operbe has every project keep two lists, in the same shape.
+operbe has every project keep two lists, in the same shape, and offers a third.
 
 - **Operations** are everything that passes through the server membrane. There is one set, defined once and used by every front end. Operations are code.
 - **Behaviors** are everything the designer wants to hold true in the user interface. They are documentation that every UI is built from and checked against.
+- **Client actions** (optional) are everything a UI can be asked to do on its own screen: by a command palette, a shortcut, or an assistant working the app for a person. They are code in the UI. Each is classed show, prepare or do, and each names the behavior it carries out.
 
 ```
    people            agents            scripts
@@ -42,7 +43,7 @@ It is not a spec either. A project's two lists are its specs, and operbe is how 
 
 It is not a design system. It doesn't say what a designer should decide, only how a decision is written down and checked.
 
-And it generates nothing. No UI is produced from the behavior list, and nothing reads the list at runtime.
+And it generates nothing. No UI is produced from the behavior list, and nothing reads that list at runtime. (Client actions are different: they are the UI's own code.)
 
 ## When to use it
 
@@ -75,6 +76,7 @@ python3 skills/operbe/scripts/check.py <your project> --write
 |---|---|---|
 | Operations | What an operation is, how big, what it declares | `skills/operbe/references/operations.md` |
 | Behaviors | What a behavior is, how it's written, coverage | `skills/operbe/references/behaviors.md` |
+| Client actions | What a UI can be asked to do, the three classes, reaching a screen from outside | `skills/operbe/references/client-actions.md` |
 | In tandem | How the two lists are worked out together, with an example | `skills/operbe/references/tandem.md` |
 | Formats | The exact form of each file | `skills/operbe/references/formats.md` |
 | Adopting | Starting a project, or bringing operbe into one | `skills/operbe/references/adopting.md` |

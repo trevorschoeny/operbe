@@ -1,7 +1,7 @@
 {
   "name": "operbe",
-  "version": "0.1.0",
-  "description": "operbe, the operations and behaviors method. A software development method for projects with a server and front ends (UI, MCP, command line, API): one list of operations that every front end uses, and one list of behaviors that every UI is built from and checked against.",
+  "version": "0.2.0",
+  "description": "operbe, the operations and behaviors method. A software development method for projects with a server and front ends (UI, MCP, command line, API): one list of operations that every front end uses, one list of behaviors that every UI is built from and checked against, and optionally one catalogue of client actions that a command palette, shortcuts and an AI assistant use to work the UI.",
   "author": {
     "name": "Trevor Schoeny"
   },

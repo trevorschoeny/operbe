@@ -158,6 +158,8 @@ A written list drifts unless people check it on purpose. These practices help, a
 7. Name the operations it ends in, if any. If one is missing, that is a finding for the operation list.
 8. Give it the next id, with status `rough` and form 1.
 
+A behavior that a palette, a shortcut or an assistant could ask a UI to do is carried out by one or more client actions, where the project keeps them. See `client-actions.md`.
+
 ## 11. What each project decides
 
 - Which UIs exist, and which is built first.

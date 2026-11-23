@@ -19,8 +19,9 @@ The two lists find each other's gaps, so they are never written one after the ot
 4. For anything still missing, add an operation by the checklist in `operations.md`. Size it for what it means, which is rarely the same as what this one screen needs. Then ask what the other front ends would call it. If the answer is awkward, the operation is shaped too much like the UI.
 5. Write the behavior's examples. Include what the UI shows when an operation refuses, fails or takes a while. A missing fact on an operation usually shows up here.
 6. Build the operations, then the front ends. A command line or MCP server uses the operations directly.
-7. Record coverage for each UI and run the check.
-8. A behavior becomes firm once one real UI has built it and it read the same to everyone.
+7. If the project keeps client actions, ask of each behavior: could a palette, a shortcut or an assistant ask for this? If so, add or reuse a client action by the checklist in `client-actions.md`. If not, mark the behavior `client-actions: none`.
+8. Record coverage for each UI and run the check.
+9. A behavior becomes firm once one real UI has built it and it read the same to everyone.
 
 Working a feature through often turns up something the designer didn't mention, such as a way to take an action back. Ask the designer. Don't add it quietly, and don't leave it out quietly.
 
@@ -35,6 +36,8 @@ Working a feature through often turns up something the designer didn't mention, 
 | The command line can do something the UI can't, or the reverse | Fine if deliberate; otherwise a behavior is missing |
 | Nobody can check a behavior on a real UI | It is too vague and stays rough |
 | Every change in the project is a named change | Some are plain data and should be generic |
+| A client action is named after a button or a gesture | It is a control; name what a person would ask for |
+| A client action classed show lists a change | It acts; it is a do, or two actions |
 
 ## A worked example
 
@@ -56,4 +59,6 @@ Writing the examples for B-0001 ("it appears in the archive") shows that a UI mu
 
 The app also lets people retitle a conversation. That is plain data with no side effect, so it is a generic change, `set-conversation-title`, with nothing in `named-because`.
 
-The result is four operations and three behaviors. The command line gets `archive`, `unarchive`, `list` and `retitle` straight from the operations, with no behaviors involved.
+Later the desktop gets a command palette and both UIs get a built-in assistant, so the project takes up client actions. Archiving becomes a `do`, `archive-conversation`, carrying out B-0001 and ending in the operation of the same name. Showing the archive is a `show`. Opening a title for editing with some text already in it is a `prepare`, `start-retitle`: the person still saves. Swipe to archive gets no action of its own, because a swipe is a gesture that runs the same action, so B-0002 is marked `client-actions: none`; so is the dimming rule.
+
+The result is four operations, four behaviors and three client actions. The command line gets `archive`, `unarchive`, `list` and `retitle` straight from the operations, with no behaviors involved.
