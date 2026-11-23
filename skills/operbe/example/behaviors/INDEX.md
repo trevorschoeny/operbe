@@ -8,3 +8,4 @@
 | B-0002 | Swipe to archive | firm | 1 |
 | B-0003 | Archived looks dimmed | rough | 1 |
 | B-0004 | Rename a conversation | rough | 1 |
+| B-0005 | The two lists | rough | 1 |

@@ -19,7 +19,7 @@ The two lists find each other's gaps, so they are never written one after the ot
 4. For anything still missing, add an operation by the checklist in `operations.md`. Size it for what it means, which is rarely the same as what this one screen needs. Then ask what the other front ends would call it. If the answer is awkward, the operation is shaped too much like the UI.
 5. Write the behavior's examples. Include what the UI shows when an operation refuses, fails or takes a while. A missing fact on an operation usually shows up here.
 6. Build the operations, then the front ends. A command line or MCP server uses the operations directly.
-7. If the project keeps client actions, ask of each behavior: could a palette, a shortcut or an assistant ask for this? If so, add or reuse a client action by the checklist in `client-actions.md`. If not, mark the behavior `client-actions: none`.
+7. If the project keeps client actions, ask of each behavior a person can trigger: could a palette, a shortcut or an assistant ask for this? If so, add or reuse a client action by the checklist in `client-actions.md`. If there is nothing to call, or the designer doesn't want it offered, mark the behavior `client-actions: none` and say which.
 8. Record coverage for each UI and run the check.
 9. A behavior becomes firm once one real UI has built it and it read the same to everyone.
 
@@ -59,6 +59,11 @@ Writing the examples for B-0001 ("it appears in the archive") shows that a UI mu
 
 The app also lets people retitle a conversation. That is plain data with no side effect, so it is a generic change, `set-conversation-title`, with nothing in `named-because`.
 
-Later the desktop gets a command palette and both UIs get a built-in assistant, so the project takes up client actions. Archiving becomes a `do`, `archive-conversation`, carrying out B-0001 and ending in the operation of the same name. Showing the archive is a `show`. Opening a title for editing with some text already in it is a `prepare`, `start-retitle`: the person still saves. Swipe to archive gets no action of its own, because a swipe is a gesture that runs the same action, so B-0002 is marked `client-actions: none`; so is the dimming rule.
+Later the desktop gets a command palette and both UIs get a built-in assistant, so the project takes up client actions.
 
-The result is four operations, four behaviors and three client actions. The command line gets `archive`, `unarchive`, `list` and `retitle` straight from the operations, with no behaviors involved.
+- Archiving becomes a `do`, `archive-conversation`. It carries out B-0001 and ends in the operation of the same name. Because archiving can be taken back, there is a second `do`, `unarchive-conversation`; without it an assistant that archived the wrong thing couldn't undo it.
+- Going between the two lists is one `show`, `show-conversations`, with which list as its input. It needed a behavior to carry out, and none said the two lists exist, so the designer added B-0005.
+- Opening a title for editing with a suggested title already in it is a `prepare`, `start-retitle`: the person still saves. That showed B-0004 had never said a title could be suggested, so the designer added it. The action is on the phone only for now.
+- Swipe to archive gets no action of its own. A swipe is a gesture that runs the same action, so B-0002 is marked `client-actions: none`. So is the dimming rule.
+
+The result is four operations, five behaviors and four client actions. The command line gets `archive`, `unarchive`, `list` and `retitle` straight from the operations, with no behaviors involved.

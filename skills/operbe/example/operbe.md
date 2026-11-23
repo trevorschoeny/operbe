@@ -10,5 +10,6 @@ uis: [phone, desktop]
 - Front ends: a phone UI, a desktop UI and a command line.
 - The phone UI is built first.
 - Client actions are kept, for the desktop's command palette and for an assistant built into both UIs.
+- Renaming in place is on the phone only for now, so `start-retitle` applies to the phone.
 
 ## Known deviations

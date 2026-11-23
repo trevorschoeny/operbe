@@ -26,6 +26,8 @@ The designer owns the behavior list. Anyone may propose a behavior or a change, 
 
 Whoever builds the server owns the operation list. Each UI's builder owns that UI's coverage file.
 
+Where a project keeps client actions, the designer settles which behaviors are offered to callers and each action's class, since the class decides when an assistant must ask. Whoever builds the UIs owns names, inputs and results. An agent may propose a client action; it doesn't add a `do` by itself.
+
 One person may hold all three roles. They still matter, because they say whose word settles a disagreement.
 
 ## Working with agents

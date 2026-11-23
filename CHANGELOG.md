@@ -1,10 +1,12 @@
 # Changelog
 
-## 0.2 (draft, 2026-11-23)
+## 0.2 (2026-11-23)
 Still experimental.
-- Client actions: an optional third list. Definition, three classes (show, prepare, do), what each declares, one catalogue for the palette, shortcuts and an assistant, the same-as-by-hand rules, reaching a screen from outside with a screen handle, coverage per UI.
+- Client actions: an optional third list. A client action is something a UI can be asked to do on its own screen, by a command palette, a shortcut or an assistant. Three classes (show, prepare, do), stated inputs, five results, the same-as-by-hand rules, when to use client actions and when operations, and ways to reach a screen from outside.
 - Formats: the client action record; `client-actions` in the profile; `client-actions: none` on a behavior; client action lines in a UI's coverage file; a generated client action index.
-- The check validates client actions, refuses a class that disagrees with the operations listed, and reports unbuilt actions and uncarried behaviors as gaps.
+- The check validates client actions. It refuses a class that disagrees with the operations listed, an input that isn't stated, and a list written without brackets. It reports unbuilt actions and uncarried behaviors as gaps.
+- Operations: where a project keeps client actions, every change records who asked.
+- Fixed in the check: a list field written without brackets was read as empty; `form` accepted characters that aren't plain digits.
 - A project on 0.1 that keeps no client actions needs no change.
 
 ## 0.1 (2026-11-22)

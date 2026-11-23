@@ -43,7 +43,7 @@ It is not a spec either. A project's two lists are its specs, and operbe is how 
 
 It is not a design system. It doesn't say what a designer should decide, only how a decision is written down and checked.
 
-And it generates nothing. No UI is produced from the behavior list, and nothing reads that list at runtime. (Client actions are different: they are the UI's own code.)
+And it generates nothing. No UI is produced from the behavior list, and nothing reads that list at runtime. Client actions are the exception. They are the UI's own code, and their records say what that code is agreed to do.
 
 ## When to use it
 

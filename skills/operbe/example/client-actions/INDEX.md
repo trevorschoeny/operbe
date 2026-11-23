@@ -4,8 +4,9 @@
 
 Blank = not yet built. n/a = doesn't apply to that UI.
 
-| name | class | behaviors | phone | desktop |
-|---|---|---|---|---|
-| archive-conversation | do | B-0001 | honours | honours |
-| show-archive | show | B-0001 | honours | honours |
-| start-retitle | prepare | B-0004 | honours |  |
+| name | class | status | behaviors | phone | desktop |
+|---|---|---|---|---|---|
+| archive-conversation | do | firm | B-0001 | honours | honours |
+| show-conversations | show | firm | B-0005 | honours | honours |
+| start-retitle | prepare | firm | B-0004 | honours | n/a |
+| unarchive-conversation | do | firm | B-0001 | honours |  |

@@ -109,6 +109,7 @@ These facts are stated once, on the operation, and every front end reads them fr
 3. Doing many at once is a separate operation from doing one.
 4. Front ends stay thin. A front end may group, rename or reshape operations for its users, but it adds no rules of its own.
 5. Add late. When in doubt, leave an operation out: adding one later is safe, and changing or removing one is not.
+6. Where a project keeps client actions, every change records who asked: the person, or an assistant for them. How that is carried is the project's choice.
 
 ## 9. Operations and behaviors
 

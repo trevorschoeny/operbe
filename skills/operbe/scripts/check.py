@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """operbe check: validates a project's operation records, behavior records,
-client action records (if the project keeps them) and coverage files against references/formats.md, and (with --write) rebuilds the
-generated index and coverage table.
+client action records (if the project keeps them) and coverage files against
+references/formats.md, and (with --write) rebuilds the generated indexes and
+the coverage table.
 
 Usage:  python3 check.py <project root> [--write]
 Exit code 0 = no errors (gaps are reported but are not errors).
@@ -18,6 +19,16 @@ COVER = {"honours", "differs", "limited", "not-here"}
 B_REQUIRED = ["Statement", "Examples", "Changes"]
 B_OPTIONAL = ["Flow", "Appears when", "Usable when", "Undo", "Differs on"]
 A_CLASSES = {"show", "prepare", "do"}
+A_RESULTS = {"done", "refused", "waiting", "started", "unknown"}
+NAME = r"[a-z0-9]+(-[a-z0-9]+)+"
+
+def whole(v): return bool(re.fullmatch(r"[0-9]+", str(v)))     # isdigit() also accepts characters like a superscript 2
+def as_list(where, head, key):
+    """A header field that must be written [a, b]. Anything else is an error, never an empty list."""
+    v = head.get(key)
+    if isinstance(v, list): return v
+    if key in head: err(where, f"{key} must be a list: [a, b]")
+    return []
 
 errors, gaps = [], []
 def err(where, msg): errors.append(f"{where}: {msg}")
@@ -87,14 +98,15 @@ def check_behaviors(folder, ops, uis):
         seen_names[name] = bid
         status = h.get("status")
         if status not in STATUSES: err(w, f"status must be one of {sorted(STATUSES)}")
-        if not str(h.get("form", "")).isdigit() or int(h["form"]) < 1: err(w, "form must be a whole number, 1 or more")
+        if not whole(h.get("form", "")) or int(h["form"]) < 1: err(w, "form must be a whole number, 1 or more")
         applies = h.get("applies-to")
         if applies != "all":
             if not isinstance(applies, list) or not applies: err(w, "applies-to must be 'all' or a list of UIs")
             else:
                 for u in applies:
                     if u not in uis: err(w, f"applies-to names '{u}', which is not a UI in operbe.md")
-        for o in h.get("operations") or []:
+        b_ops = as_list(w, h, "operations")
+        for o in b_ops:
             if o not in ops: err(w, f"operation '{o}' is not in the operation list")
         if status == "retired" and not h.get("replaced-by"): err(w, "a retired behavior must say what replaced it")
         if status != "retired" and h.get("replaced-by"): err(w, "replaced-by is only for a retired behavior")
@@ -106,7 +118,7 @@ def check_behaviors(folder, ops, uis):
         if titles != sorted(titles, key=lambda t: order.index(t) if t in order else 99): err(w, "sections are out of order")
         n_examples = len(re.findall(r"^- ", s.get("Examples", ""), flags=re.M))
         if status == "firm" and n_examples < 2: err(w, "a firm behavior needs at least two examples")
-        out[bid] = dict(callable=h.get("client-actions") != "none", changes=any(ops.get(o) in ("change", "signal") for o in h.get("operations") or []), name=name, status=status, form=int(h["form"]) if str(h.get("form", "")).isdigit() else 0,
+        out[bid] = dict(callable=h.get("client-actions") != "none", changes=any(ops.get(o) in ("change", "signal") for o in b_ops), name=name, status=status, form=int(h["form"]) if whole(h.get("form", "")) else 0,
                         uis=uis if applies == "all" else (applies if isinstance(applies, list) else []))
     for p in sorted(folder.glob("B-*.md")):
         h, _, _ = read(p); r = h.get("replaced-by")
@@ -117,44 +129,64 @@ def check_behaviors(folder, ops, uis):
 def check_client_actions(folder, ops, behaviors, uis):
     out = {}
     for p in sorted(folder.glob("*.md")):
-        if p.name == "INDEX.md": continue
+        if p.name in ("INDEX.md", "README.md"): continue
         h, s, titles = read(p); w = f"client-actions/{p.name}"
-        need(w, h, ["name", "class", "behaviors", "operations", "available-when", "applies-to", "in-palette", "form"])
+        need(w, h, ["name", "class", "status", "form", "behaviors", "operations", "available-when", "applies-to"])
         name = h.get("name", "")
         if name != p.stem: err(w, f"name '{name}' doesn't match the file name")
-        if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)+", name or ""): err(w, "name must be lowercase words joined by hyphens: a verb, then the thing")
-        cls = h.get("class")
+        if not re.fullmatch(NAME, name or ""): err(w, "name must be lowercase words joined by hyphens: a verb, then the thing")
+        cls, status = h.get("class"), h.get("status")
         if cls not in A_CLASSES: err(w, f"class must be one of {sorted(A_CLASSES)}")
-        behs = h.get("behaviors") if isinstance(h.get("behaviors"), list) else []
+        if status not in STATUSES: err(w, f"status must be one of {sorted(STATUSES)}")
+        behs = as_list(w, h, "behaviors")
         if not behs: err(w, "a client action must name at least one behavior it carries out")
         for b in behs:
             if b not in behaviors: err(w, f"behavior '{b}' is not in the behavior list")
-            elif behaviors[b]["status"] == "retired": err(w, f"behavior '{b}' is retired")
-        used = h.get("operations") if isinstance(h.get("operations"), list) else []
+            elif behaviors[b]["status"] == "retired" and status != "retired": err(w, f"behavior '{b}' is retired")
+            elif not behaviors[b]["callable"]: err(w, f"behavior '{b}' says 'client-actions: none', but this action carries it out")
+        used = as_list(w, h, "operations")
         for o in used:
             if o not in ops: err(w, f"operation '{o}' is not in the operation list")
         acts = [o for o in used if ops.get(o) in ("change", "signal")]
-        if cls == "show" and acts: err(w, f"a show may send only queries, but lists {acts}")   # the class must not lie
-        if cls == "do" and not acts: err(w, "a do must list at least one operation that is a change or a signal")
+        local = h.get("local") == "yes"
+        if cls == "show" and acts: err(w, f"a show may send only queries, but lists {acts}")     # the class must not lie
+        if cls == "do" and not acts and not local: err(w, "a do must list at least one operation that is a change or a signal, or say 'local: yes'")
+        if local and cls != "do": err(w, "'local: yes' is only for a do")
+        if cls == "prepare" and acts: gaps.append(f"{w}: a prepare that lists {acts}; make sure nobody else can see or is bound by what it sends")
         if not h.get("available-when"): err(w, "available-when is empty; write 'always' if there is no condition")
-        if h.get("in-palette") not in ("yes", "no"): err(w, "in-palette must be yes or no")
-        if not str(h.get("form", "")).isdigit() or int(h["form"]) < 1: err(w, "form must be a whole number, 1 or more")
+        if not whole(h.get("form", "")) or int(h["form"]) < 1: err(w, "form must be a whole number, 1 or more")
         applies = h.get("applies-to")
         if applies != "all":
             if not isinstance(applies, list) or not applies: err(w, "applies-to must be 'all' or a list of UIs")
             else:
                 for u in applies:
                     if u not in uis: err(w, f"applies-to names '{u}', which is not a UI in operbe.md")
+        if status == "retired" and not h.get("replaced-by"): err(w, "a retired client action must say what replaced it")
+        if status != "retired" and h.get("replaced-by"): err(w, "replaced-by is only for a retired client action")
         for sec in ("Sentence", "Result"):
             if not s.get(sec): err(w, f"missing or empty section '{sec}'")
+        order = ["Sentence", "Inputs", "Unavailable", "Result"]
         for t in titles:
-            if t not in ("Sentence", "Result", "Unavailable"): err(w, f"section '{t}' is not allowed")
-        out[name] = dict(name=name, status="firm", cls=cls, behaviors=behs, form=int(h["form"]) if str(h.get("form", "")).isdigit() else 0,
+            if t not in order: err(w, f"section '{t}' is not allowed")
+        if titles != sorted(titles, key=lambda t: order.index(t) if t in order else 99): err(w, "sections are out of order")
+        braces = set(re.findall(r"\{([^{}]+)\}", s.get("Sentence", "")))                   # every input is stated, none hidden
+        stated = set(m.strip() for m in re.findall(r"^- ([^:\n]+):", s.get("Inputs", ""), flags=re.M))
+        for x in sorted(braces - stated): err(w, f"input '{{{x}}}' in the sentence has no line under Inputs")
+        for x in sorted(stated - braces): err(w, f"Inputs lists '{x}', which is not in the sentence")
+        kinds = [m.strip() for m in re.findall(r"^- ([^:\n]+):", s.get("Result", ""), flags=re.M)]
+        for k in kinds:
+            if k not in A_RESULTS: err(w, f"result '{k}' must be one of {sorted(A_RESULTS)}")
+        if s.get("Result") and "done" not in kinds: err(w, "Result must say what 'done' reports")
+        out[name] = dict(name=name, status=status, cls=cls, behaviors=behs, form=int(h["form"]) if whole(h.get("form", "")) else 0,
                          uis=uis if applies == "all" else (applies if isinstance(applies, list) else []))
-    carried = {b for a in out.values() for b in a["behaviors"]}
-    for bid, b in behaviors.items():                   # a firm behavior that changes something should be callable
+    for p in sorted(folder.glob("*.md")):
+        if p.name in ("INDEX.md", "README.md"): continue
+        h, _, _ = read(p); r = h.get("replaced-by")
+        if r and r not in out: err(f"client-actions/{p.name}", f"replaced-by '{r}' is not a client action")
+    carried = {b for a in out.values() if a["status"] != "retired" for b in a["behaviors"]}
+    for bid, b in behaviors.items():                   # a firm behavior that sends something should be callable, or say why not
         if b["status"] == "firm" and b["changes"] and b["callable"] and bid not in carried:
-            gaps.append(f"client actions: {bid} '{b['name']}' is firm, sends a change, and no client action carries it out (or mark it 'client-actions: none')")
+            gaps.append(f"client actions: {bid} '{b['name']}' is firm, sends a change or a signal, and no client action carries it out (or mark it 'client-actions: none')")
     return out
 
 
@@ -166,17 +198,19 @@ def check_coverage(folder, behaviors, uis, actions=None):
         if not p.exists(): gaps.append(f"{w}: no coverage file for this UI yet"); continue
         for line in p.read_text(encoding="utf-8").splitlines():
             cells = [c.strip() for c in line.strip().strip("|").split("|")]
-            if len(cells) < 4 or cells[0] in ("id", "") or set(cells[0]) <= set("-: "): continue
+            first = cells[0]
+            known = first in behaviors or first in actions
+            if not known and not re.fullmatch(r"B-\d+", first) and not (actions and re.fullmatch(NAME, first)): continue   # headers, totals, notes
+            if len(cells) < 4: err(w, f"{first}: a coverage line has four cells: id, value, form, note"); continue
             bid, value, form, note = cells[:4]
-            if bid not in behaviors and bid not in actions:
-                err(w, f"{bid} is not a behavior" + (" or a client action" if actions else "")); continue
+            if not known: err(w, f"{bid} is not a behavior" + (" or a client action" if actions else "")); continue
             b = behaviors.get(bid) or actions[bid]
             if (bid, ui) in table: err(w, f"{bid} has more than one line")
             if ui not in b["uis"]: err(w, f"{bid} doesn't apply to {ui}")
             if value not in COVER: err(w, f"{bid}: value must be one of {sorted(COVER)}")
             if value in ("differs", "limited", "not-here") and not note: err(w, f"{bid}: '{value}' needs a note")
             if value != "not-here":
-                if not form.isdigit(): err(w, f"{bid}: '{value}' needs the form it was built against")
+                if not whole(form): err(w, f"{bid}: '{value}' needs the form it was built against")
                 elif int(form) > b["form"]: err(w, f"{bid}: form {form} is newer than the record (form {b['form']})")
                 elif int(form) < b["form"]: gaps.append(f"{w}: {bid} was built against form {form}; the record is now form {b['form']}")
             if value == "differs": gaps.append(f"{w}: {bid} differs ({note})")
@@ -185,9 +219,15 @@ def check_coverage(folder, behaviors, uis, actions=None):
         if b["status"] == "firm":
             for ui in b["uis"]:
                 if (bid, ui) not in table: gaps.append(f"{ui}: {bid} '{b['name']}' is firm and not yet built")
-    for name, a in actions.items():                    # every UI offers each client action, or says why not
+    for name, a in actions.items():                    # every UI offers each firm client action, or says why not
         for ui in a["uis"]:
-            if (name, ui) not in table and (folder / f"{ui}.md").exists(): gaps.append(f"{ui}: client action '{name}' is not yet built")
+            if not (folder / f"{ui}.md").exists(): continue
+            if (name, ui) not in table:
+                if a["status"] == "firm": gaps.append(f"{ui}: client action '{name}' is firm and not yet built")
+            elif table[(name, ui)] != "not-here":
+                for bid in a["behaviors"]:              # an action built ahead of the behavior it carries out
+                    if bid in behaviors and ui in behaviors[bid]["uis"] and (bid, ui) not in table:
+                        gaps.append(f"{ui}: client action '{name}' is built, but {bid} which it carries out has no coverage line")
     return table
 
 
@@ -209,9 +249,11 @@ def main():
     ops = check_operations(ops_dir) if ops_dir.is_dir() else {}
     behaviors = check_behaviors(beh_dir, ops, uis) if beh_dir.is_dir() else {}
     actions, act_dir = {}, None
-    if profile.get("client-actions"):                 # the third list is optional
+    if "client-actions" in profile:                   # the third list is optional: no line, no list
         act_dir = root / str(profile["client-actions"])
-        if not act_dir.is_dir(): err("operbe.md", f"the folder '{act_dir.name}' it names does not exist")
+        if not profile["client-actions"]: err("operbe.md", "client-actions is empty; name the folder, or remove the line"); act_dir = None
+        elif act_dir.resolve() in (ops_dir.resolve(), beh_dir.resolve()): err("operbe.md", "client-actions must be a folder of its own"); act_dir = None
+        elif not act_dir.is_dir(): err("operbe.md", f"the folder '{act_dir.name}' it names does not exist")
         else: actions = check_client_actions(act_dir, ops, behaviors, uis)
     table = check_coverage(beh_dir / "coverage", behaviors, uis, actions)
 
@@ -225,8 +267,8 @@ def main():
         (beh_dir / "COVERAGE.md").write_text(encoding="utf-8", data=note + "# Coverage\n\nBlank = not yet built. n/a = doesn't apply to that UI.\n\n" + head + rows)
 
     if "--write" in sys.argv and act_dir and act_dir.is_dir():
-        head = "| name | class | behaviors | " + " | ".join(uis) + " |\n|---|---|---|" + "---|" * len(uis) + "\n"
-        rows = "".join(f"| {n} | {a['cls']} | {', '.join(a['behaviors'])} | " + " | ".join(
+        head = "| name | class | status | behaviors | " + " | ".join(uis) + " |\n|---|---|---|---|" + "---|" * len(uis) + "\n"
+        rows = "".join(f"| {n} | {a['cls']} | {a['status']} | {', '.join(a['behaviors'])} | " + " | ".join(
             table.get((n, u), "" if u in a["uis"] else "n/a") for u in uis) + " |\n" for n, a in sorted(actions.items()))
         (act_dir / "INDEX.md").write_text(encoding="utf-8", data="<!-- Generated by operbe check.py. Do not edit. -->\n\n# Client actions\n\nBlank = not yet built. n/a = doesn't apply to that UI.\n\n" + head + rows)
 

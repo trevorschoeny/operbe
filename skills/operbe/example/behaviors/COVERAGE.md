@@ -9,4 +9,5 @@ Blank = not yet built. n/a = doesn't apply to that UI.
 | B-0001 | Archive a conversation | honours | differs |
 | B-0002 | Swipe to archive | honours | n/a |
 | B-0003 | Archived looks dimmed |  |  |
-| B-0004 | Rename a conversation |  |  |
+| B-0004 | Rename a conversation | honours |  |
+| B-0005 | The two lists | honours | honours |
