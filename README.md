@@ -94,3 +94,7 @@ See `CHANGELOG.md`.
 ## What each project decides
 
 A project decides everything operbe doesn't state: the language its operations are defined in, the architecture underneath, which front ends exist, how behaviors are grouped, and how strict the change process is. It records those choices in its `operbe.md` file.
+
+## License
+
+MIT. See `LICENSE`.
