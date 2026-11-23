@@ -149,7 +149,11 @@ def check_client_actions(folder, ops, behaviors, uis):
             if o not in ops: err(w, f"operation '{o}' is not in the operation list")
         acts = [o for o in used if ops.get(o) in ("change", "signal")]
         local = h.get("local") == "yes"
-        if cls == "show" and acts: err(w, f"a show may send only queries, but lists {acts}")     # the class must not lie
+        # the class must not lie: a show sends only queries, unless the project has decided the change is a consequence
+        # the person already agreed to, and the record says so in 'show-because' (client-actions.md section 3)
+        if cls == "show" and acts and not str(h.get("show-because") or "").strip():
+            err(w, f"a show may send only queries, but lists {acts}; if the project decided this change is already agreed to, say why in 'show-because'")
+        if h.get("show-because") and not (cls == "show" and acts): err(w, "'show-because' is only for a show that lists a change")
         if cls == "do" and not acts and not local: err(w, "a do must list at least one operation that is a change or a signal, or say 'local: yes'")
         if local and cls != "do": err(w, "'local: yes' is only for a do")
         if cls == "prepare" and acts: gaps.append(f"{w}: a prepare that lists {acts}; make sure nobody else can see or is bound by what it sends")

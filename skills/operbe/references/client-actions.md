@@ -54,13 +54,13 @@ Every client action is exactly one of these.
 
 The class is the line a person cares about: it moved my view, it set something up for me, or it acted.
 
-- A `show` **must not** send any operation except queries.
+- A `show` **must not** send any operation except queries, unless the project decided otherwise for it (below) and its record says why in `show-because`.
 - A `prepare` **must not** leave anything other people can see or are bound by. Saving a draft that only the person can see is allowed.
 - A `do` **must** list the operations it ends in, at least one of them a change or a signal. A `do` that commits something on the device alone lists none and says `local: yes`.
 
 Three cases come up often.
 
-- **A view that also sends something.** If opening a conversation marks it read and the other person sees that, the action sends a change, so it is a `do`. A project may decide that such a change is a consequence the person has already agreed to (a setting), record that decision, and class the action `show`. It still lists the operation, and the record says why.
+- **A view that also sends something.** If opening a conversation marks it read and the other person sees that, the action sends a change, so it is a `do`. A project may decide that such a change is a consequence the person has already agreed to (a setting), record that decision, and class the action `show`. It still lists the operation, and the record says why in `show-because`.
 - **An act with a review.** An action that only brings up the review is a `prepare` and lists no operations. Committing is a separate `do`. Run by anything other than the person, that `do` stops at the review (rule 2).
 - **Taking it back.** If a `do` can be taken back, there **should** be an action that takes it back. Otherwise a caller that archives by mistake can't undo it through the UI.
 
@@ -184,7 +184,7 @@ An action is retired the way a behavior is: its status becomes `retired` and it 
 ## 12. What to guard against
 
 - **Text on screen that addresses the assistant.** Content is not instruction. The classes limit the harm: the worst a tricked caller does through a `show` is move the view.
-- **A class that lies.** The check compares each action's class with the operations it lists. A `show` that lists a change is an error.
+- **A class that lies.** The check compares each action's class with the operations it lists. A `show` that lists a change is an error, unless its `show-because` says why.
 - **The screen changing between asking and running.** The screen checks again when the call arrives, and refuses with the reason if the action can no longer run.
 - **A crowded palette.** Not every action belongs in a palette. Leave out one that needs an input the palette can neither ask for nor take from the selection.
 - **Drift.** An action that names a retired behavior is an error. An action built against an older form of its record is a gap.

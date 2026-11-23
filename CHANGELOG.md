@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.1 (2026-11-23)
+- Fixed: the guide let a project class a view that also sends a change as a `show` by recorded decision, but the format and the check forbade it. A `show` may now list a change when its `show-because` says why; the check refuses `show-because` anywhere else.
+
 ## 0.2 (2026-11-23)
 Still experimental.
 - Client actions: an optional third list. A client action is something a UI can be asked to do on its own screen, by a command palette, a shortcut or an assistant. Three classes (show, prepare, do), stated inputs, five results, the same-as-by-hand rules, when to use client actions and when operations, and ways to reach a screen from outside.

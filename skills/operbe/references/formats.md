@@ -176,6 +176,7 @@ Archive {conversation}.
 | `form` | A whole number, 1 or more. It goes up when the class, the inputs, the operations, the condition or the results change in meaning. |
 | `behaviors` | A list of ids that exist and are not retired. At least one. |
 | `operations` | A list of names from the operation list. A `show` lists only queries. A `do` lists at least one change or signal, unless it is local. |
+| `show-because` | Only on a `show` that lists a change: why the project decided this change is a consequence the person has already agreed to, naming the decision in `operbe.md`. Without it, a `show` lists only queries. |
 | `local` | Optional. `yes` on a `do` that commits something on the device alone and so lists no change. |
 | `available-when` | The condition in words, or `always`. "I" is the person at the screen. |
 | `applies-to` | `all`, or a list of names from the profile's `uis`. |
